@@ -42,7 +42,7 @@ function AddNewSessionDialog() {
     console.log(result.data);
     if (result.data?.sessionId) {
       console.log(result.data.sessionId);
-      router.push("/dashboard/mmedical-agent/" + result.data.sessionId);
+      router.push("/dashboard/medical-agent/" + result.data.sessionId);
     }
     setLoading(false);
   };
