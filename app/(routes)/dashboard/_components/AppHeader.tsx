@@ -1,5 +1,6 @@
 import { UserButton } from "@clerk/nextjs";
 import Image from "next/image";
+import Link from "next/link";
 import React from "react";
 
 function AppHeader() {
@@ -7,35 +8,37 @@ function AppHeader() {
     {
       id: 1,
       name: "Home",
-      path: "/home",
+      path: "/dashboard",
     },
     {
       id: 2,
       name: "History",
-      path: "/history",
+      path: "/dashboard/history",
     },
     {
       id: 3,
       name: "Pricing",
-      path: "/pricing",
+      path: "/dashboard/billing",
     },
     {
       id: 4,
       name: "Profile",
-      path: "/profile",
+      path: "/dashboard/profile",
     },
   ];
 
   return (
     <div className="flex items-center justify-between p-4 shadow px-10 md:px-20 lg:px-40">
-      <Image src={"/logo.svg"} alt="logo" width={180} height={90} />
+      <Link href={"/"}>
+        <Image src={"/logo.png"} alt="logo" width={180} height={90} />
+      </Link>
       <div className="hidden md:flex gap-12 items-center">
         {menuOptions.map((option) => (
-          <div key={option.id}>
+          <Link href={option.path} key={option.id}>
             <h2 className="hover:font-bold  cursor-pointer transition-all">
               {option.name}
             </h2>
-          </div>
+          </Link>
         ))}
       </div>
       <UserButton />

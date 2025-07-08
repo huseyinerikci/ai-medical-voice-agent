@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
       ", Conversation:" +
       JSON.stringify(messages);
     const completion = await openai.chat.completions.create({
-      model: "google/gemini-2.5-flash-preview-05-20",
+      model: "openai/gpt-4o-mini",
       messages: [
         { role: "system", content: REPORT_GEN_PROMPT },
         { role: "user", content: UserInput },
@@ -64,6 +64,14 @@ export async function POST(req: NextRequest) {
       .where(eq(SessionChatTable.sessionId, sessionId));
     return NextResponse.json(JSONResp);
   } catch (e) {
-    return NextResponse.json(e);
+    //const errorMsg = e instanceof Error ? e.message : JSON.stringify(e);
+    //console.error("Medical report update error:", errorMsg, e);
+    //return NextResponse.json({ error: errorMsg });
+    const errorMsg = e instanceof Error ? e.message : "Unknown error";
+    console.error("Medical report update error:", errorMsg);
+    return NextResponse.json(
+      { error: "An error occurred while generating the report." },
+      { status: 500 }
+    );
   }
 }

@@ -9,7 +9,7 @@ function DoctorsAgentList() {
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-8 mt-5">
         {AIDoctorAgents.map((doctor) => (
           <div key={doctor.id}>
-            <DoctorAgentCard doctorAgent={doctor} />
+            <DoctorAgentCard doctor={doctor} />
           </div>
         ))}
       </div>

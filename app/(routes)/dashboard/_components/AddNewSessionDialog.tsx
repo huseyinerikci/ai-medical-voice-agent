@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Dialog,
   DialogClose,
@@ -17,39 +17,86 @@ import axios from "axios";
 import { doctorAgent } from "./DoctorAgentCard";
 import SuggestedDoctorCard from "./SuggestedDoctorCard";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@clerk/nextjs";
+import { SessionDetail } from "../medical-agent/[sessionId]/page";
+import { toast } from "sonner";
+
 function AddNewSessionDialog() {
   const [note, setNote] = useState<string>();
   const [loading, setLoading] = useState(false);
   const [suggestedDoctors, setSuggestedDoctors] = useState<doctorAgent[]>();
   const [selectedDoctor, setSelectedDoctor] = useState<doctorAgent>();
+  const [historyList, setHistoryList] = useState<SessionDetail[]>([]);
   const router = useRouter();
 
+  const { has } = useAuth();
+  //@ts-ignore
+  const paidUser = has && has({ plan: "pro" });
+
+  useEffect(() => {
+    GetHistoryList();
+  }, []);
+
+  const GetHistoryList = async () => {
+    const result = await axios.get("/api/session-chat?sessionId=all");
+    setHistoryList(result.data);
+  };
+
   const OnClickNext = async () => {
-    setLoading(true);
-    const result = await axios.post("/api/suggest-doctors", {
-      notes: note,
-    });
-    console.log(result.data);
-    setSuggestedDoctors(result.data);
-    setLoading(false);
+    try {
+      setLoading(true);
+      const result = await axios.post("/api/suggest-doctors", {
+        notes: note,
+      });
+      setSuggestedDoctors(result.data);
+    } catch (err: any) {
+      if (err?.response?.data?.error) {
+        toast.error(
+          "AI servislerinde bir hata oluştu: " + err.response.data.error
+        );
+      } else {
+        toast.error(
+          "AI servislerinde bir hata oluştu. Lütfen daha sonra tekrar deneyin."
+        );
+      }
+    } finally {
+      setLoading(false);
+    }
   };
   const onStartConsultation = async () => {
     setLoading(true);
-    const result = await axios.post("/api/session-chat", {
-      notes: note,
-      selectedDoctor: selectedDoctor,
-    });
-    console.log(result.data);
-    if (result.data?.sessionId) {
-      console.log(result.data.sessionId);
-      router.push("/dashboard/medical-agent/" + result.data.sessionId);
+    try {
+      await axios.post("/api/users");
+      const result = await axios.post("/api/session-chat", {
+        notes: note,
+        selectedDoctor: selectedDoctor,
+      });
+      if (result.data?.sessionId) {
+        router.push("/dashboard/medical-agent/" + result.data.sessionId);
+      }
+    } catch (err: any) {
+      if (err?.response?.data?.error) {
+        toast.error(
+          "AI servislerinde bir hata oluştu: " + err.response.data.error
+        );
+      } else {
+        toast.error(
+          "AI servislerinde bir hata oluştu. Lütfen daha sonra tekrar deneyin."
+        );
+      }
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
   return (
     <Dialog>
-      <DialogTrigger>
-        <Button className="mt-3">+ Start a Consultation</Button>
+      <DialogTrigger asChild>
+        <Button
+          className="mt-3 cursor-pointer"
+          disabled={!paidUser && historyList?.length >= 1}
+        >
+          + Start a Consultation
+        </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>

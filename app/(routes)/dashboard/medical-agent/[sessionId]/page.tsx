@@ -7,9 +7,10 @@ import { Circle, Loader, PhoneCall, PhoneOff } from "lucide-react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import Vapi from "@vapi-ai/web";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
-type SessionDetail = {
+export type SessionDetail = {
   id: number;
   notes: string;
   sessionId: string;
@@ -32,111 +33,131 @@ function MedicalVoiceAgent() {
   const [loading, setLoading] = useState(false);
 
   const router = useRouter();
-
+  //yeni eklendi
   useEffect(() => {
     sessionId && GetSessionDetails();
   }, [sessionId]);
 
   const GetSessionDetails = async () => {
     const result = await axios.get(`/api/session-chat?sessionId=${sessionId}`);
-    console.log(result.data);
     setSessionDetail(result.data);
   };
 
-  const StartCall = () => {
+  const StartCall = async () => {
     if (!sessionDetail) return;
     setLoading(true);
-    console.log(sessionDetail);
     const vapi = new Vapi(process.env.NEXT_PUBLIC_API_KEY!);
     setVapiInstance(vapi);
 
     const VapiAgentCongfig = {
       name: "AI Medical Doctor Voice Agent",
       firstMessage:
-        "Hi there! I'm your AI Medical Assistant. I'm here to help you with any health questions or concerns you might have today. How are you felling?",
+        "Hi there! I'm your AI Medical Assistant. I'm here to help you with any health questions you might have today. How are you feeling?",
       transcriber: {
         provider: "assembly-ai",
         language: "en",
       },
       voice: {
-        provider: "playht",
-        voiceId: sessionDetail?.selectedDoctor?.voiceId ?? "will",
+        provider: "vapi",
+        voiceId: sessionDetail?.selectedDoctor?.voiceId || "Harry",
       },
       model: {
         provider: "openai",
-        model: "gpt-4",
+        model: "gpt-4o-mini",
         messages: [
           {
             role: "system",
-            content: sessionDetail?.selectedDoctor?.agentPrompt,
+            content:
+              sessionDetail?.selectedDoctor?.agentPrompt ||
+              "You are a helpful and friendly medical assistant. Answer user questions clearly and empathetically.",
           },
         ],
       },
     };
-    //@ts-ignore
-    vapi.start(VapiAgentCongfig);
-    vapi.on("call-start", () => {
-      console.log("Call started");
-      setCallStarted(true);
-    });
-    vapi.on("call-end", () => {
-      setCallStarted(false);
-      console.log("Call ended");
-    });
-    vapi.on("message", (message) => {
-      if (message.type === "transcript") {
-        const { role, transcriptType, transcript } = message;
-        console.log(`${message.role}: ${message.transcript}`);
-        if (transcriptType == "partial") {
-          setLiveTranscript(transcript);
-          setCurrentRole(role);
-        } else if (transcriptType == "final") {
-          setMessages((prev: any) => [
-            ...prev,
-            { role: role, text: transcript },
-          ]);
-          setLiveTranscript("");
-          setCurrentRole(null);
+    console.log(VapiAgentCongfig);
+    try {
+      //@ts-ignore
+      await vapi.start(VapiAgentCongfig);
+      vapi.on("call-start", () => {
+        setCallStarted(true);
+        setLoading(false);
+      });
+      vapi.on("call-end", () => {
+        setCallStarted(false);
+        setLoading(false);
+      });
+      vapi.on("message", (message) => {
+        if (message.type === "transcript") {
+          const { role, transcriptType, transcript } = message;
+          if (transcriptType == "partial") {
+            setLiveTranscript(transcript);
+            setCurrentRole(role);
+          } else if (transcriptType == "final") {
+            setMessages((prev: any) => [
+              ...prev,
+              { role: role, text: transcript },
+            ]);
+            setLiveTranscript("");
+            setCurrentRole(null);
+          }
         }
+      });
+      vapi.on("speech-start", () => {
+        setCurrentRole("assistant");
+      });
+      vapi.on("speech-end", () => {
+        setCurrentRole("user");
+      });
+    } catch (e: any) {
+      if (e?.response?.data?.error) {
+        toast.error(
+          "AI servislerinde bir hata oluştu: " + e.response.data.error
+        );
+      } else {
+        toast.error(
+          "AI servislerinde bir hata oluştu. Lütfen daha sonra tekrar deneyin."
+        );
       }
-    });
-
-    vapiInstance.on("speech-start", () => {
-      console.log("Assistant started speaking");
-      setCurrentRole("assistant");
-    });
-    vapiInstance.on("speech-end", () => {
-      console.log("Assistant stopped speaking");
-      setCurrentRole("user");
-    });
+      setLoading(false);
+    }
   };
   const endCall = async () => {
-    const result = await GenerateReport();
     if (!vapiInstance) return;
 
+    await GenerateReport();
+
     vapiInstance.stop();
-    vapiInstance.off("call-start");
-    vapiInstance.off("call-end");
-    vapiInstance.off("message");
-    vapiInstance.off("speech-start");
-    vapiInstance.off("speech-end");
 
     setCallStarted(false);
     setVapiInstance(null);
-
+    setLoading(false);
+    toast.success("Your report is generated!");
     router.replace("/dashboard");
   };
 
   const GenerateReport = async () => {
     setLoading(true);
-    const result = await axios.post("/api/medical-report", {
-      messages: messages,
-      sessionDetail: sessionDetail,
-      sessionId: sessionId,
-    });
-    console.log(result.data);
-    setLoading(false);
-    return result.data;
+    try {
+      const result = await axios.post("/api/medical-report", {
+        messages: messages,
+        sessionDetail: sessionDetail,
+        sessionId: sessionId,
+      });
+      setLoading(false);
+      await GetSessionDetails();
+      return result.data;
+    } catch (err: any) {
+      if (err?.response?.data?.error) {
+        toast.error(
+          "AI servislerinde bir hata oluştu: " + err.response.data.error
+        );
+      } else {
+        toast.error(
+          "AI servislerinde bir hata oluştu. Lütfen daha sonra tekrar deneyin."
+        );
+      }
+      setLoading(false);
+    }
   };
   return (
     <div className="p-5 border rounded-3xl bg-secondary">
