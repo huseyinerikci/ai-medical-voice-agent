@@ -2,6 +2,10 @@
 
 AI Medical Voice Agent, yapay zeka destekli sesli tıbbi danışmanlık ve raporlama platformudur. Kullanıcılar, AI doktorlarla sesli görüşme yapabilir, anında medikal rapor alabilir ve geçmiş danışma kayıtlarına erişebilir.
 
+## Önizleme
+
+![ai-medical-voice-agent](public/ai-medical-voice-agent.gif)
+
 ## Özellikler
 
 - **Sesli AI Doktor Görüşmesi:** Farklı uzmanlık alanlarında AI doktorlarla gerçek zamanlı sesli görüşme.
