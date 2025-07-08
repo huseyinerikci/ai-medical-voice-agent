@@ -28,6 +28,10 @@ AI Medical Voice Agent, yapay zeka destekli sesli tıbbi danışmanlık ve rapor
 - **Clerk (Auth)**
 - **Drizzle ORM + NeonDB (PostgreSQL)**
 
+## Demo
+
+https://ai-medical-voice-agent.netlify.app/
+
 ## Kurulum
 
 1. **Projeyi klonla:**
