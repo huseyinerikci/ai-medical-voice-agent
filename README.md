@@ -40,13 +40,21 @@ AI Medical Voice Agent, yapay zeka destekli sesli tıbbi danışmanlık ve rapor
    npm install
    ```
 3. **.env dosyasını oluştur:**
-   - `.env.local` dosyasını oluştur ve aşağıdaki değişkenleri doldur:
+   - 
      ```env
-     DATABASE_URL=...
-     OPEN_ROUTER_API_KEY=...
-     NEXT_PUBLIC_API_KEY=...
-     CLERK_PUBLISHABLE_KEY=...
-     CLERK_SECRET_KEY=...
+
+     DATABASE_URL=
+     NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=
+     CLERK_SECRET_KEY=
+     NEXT_PUBLIC_CLERK_SIGN_IN_URL=
+     NEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL=
+     NEXT_PUBLIC_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL=
+     NEXT_PUBLIC_CLERK_SIGN_UP_URL=
+     NEXT_PUBLIC_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL=
+     NEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL=
+     OPEN_ROUTER_API_KEY=
+     NEXT_PUBLIC_VAPI_VOICE_ASSISTANT_ID=
+     NEXT_PUBLIC_API_KEY=
      ```
 4. **Veritabanı migrasyonları:**
    ```sh
